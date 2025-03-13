@@ -53,17 +53,18 @@ class TimeSeriesDataset(Dataset):
         self._validate_variable()
 
         self.target_col = target_col
-
+        features = [] if features is None else features
         assert isinstance(features, (str, list)), "features must be a string or a list"
         assert isinstance(group_id, (str, list)), "group_id must be a string or a list"
         self.group_id = group_id if isinstance(group_id, list) else [group_id]
-        features = [] if features is None else features
         self.features = features if isinstance(features, list) else [features]
 
         self.date_col = date_col
         self.inp_len = inp_len
         self.pred_len = pred_len
         self.train_val_split_date = train_val_split_date
+
+        self.group_id_map = {}
 
         self.data = self._preprocess(data)
         self.train_index, self.val_index = self._construct_index(self.data)
@@ -86,6 +87,7 @@ class TimeSeriesDataset(Dataset):
         g = data.groupby(self.group_id)
         col_idx = g["__idx__"].apply(list).values.tolist()
         col_date = g[self.date_col].apply(list).values.tolist()
+        col_group = g[self.group_id].first().values
 
         index = []
         predict_date = []
@@ -103,6 +105,7 @@ class TimeSeriesDataset(Dataset):
                 )
                 predict_date.append(col_date[i][j + self.inp_len])
                 groups.append(i)
+            self.group_id_map[i] = col_group[i][0]
         # convert index to dataframe
         index = pd.DataFrame(index, columns=["index_start", "index_end"])
         # add group ids and sample ids
