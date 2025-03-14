@@ -148,8 +148,8 @@ class TimeSeriesDataset(Dataset):
         row = self.index.iloc[idx]
         start_idx = row["index_start"]
         end_idx = row["index_end"]
-        group_id = row["group_id"]
-        sample_id = row["sample_id"]
+        group_id = torch.tensor(row["group_id"], dtype=torch.long)
+        sample_id = torch.tensor(row["sample_id"], dtype=torch.long)
 
         data = self.data.iloc[start_idx : end_idx + 1]
 
